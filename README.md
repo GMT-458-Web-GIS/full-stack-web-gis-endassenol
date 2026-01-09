@@ -108,7 +108,7 @@ To conduct the experiment, the database was populated with **2001 point-based ev
 In the absence of a spatial index, PostgreSQL performs a **sequential scan** over the entire `events` table.  
 This execution strategy is typically chosen when no suitable index exists or when the query selectivity is low.
 
-![Sequential Scan](screenshots/seq_scan_wide_bbox.PNG)
+![Sequential Scan]([screenshots/seq_scan_wide_bbox.PNG](https://github.com/GMT-458-Web-GIS/full-stack-web-gis-endassenol/blob/main/screenshots/seq_scan_wide_bbox.PNG?raw=true))
 
 - Query Plan: Sequential Scan  
 - Rows scanned: Entire table  
@@ -122,7 +122,7 @@ Although acceptable for small datasets, this approach does not scale well as dat
 
 After creating a **GiST index** on the geometry column, spatial queries were re-evaluated using a **more selective bounding box**.
 
-![GiST Index](screenshots/gist_index_narrow_bbox.PNG)
+![GiST Index]([screenshots/gist_index_narrow_bbox.PNG](https://github.com/GMT-458-Web-GIS/full-stack-web-gis-endassenol/blob/main/screenshots/gist_index_narrow_bbox.PNG?raw=true))
 
 - Query Plan: Bitmap Index Scan  
 - Rows returned: ~55  
