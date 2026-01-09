@@ -97,21 +97,50 @@ backend/
 
 ## ⚡ Performance Monitoring & Spatial Indexing Experiment
 
-To evaluate the impact of spatial indexing, the `events` table was populated with 2001 point records (EPSG:4326).
+This section evaluates the impact of spatial indexing on query performance within the PostGIS-enabled `events` table.
 
-When a wide bounding box covering most of the dataset was used, PostgreSQL preferred a sequential scan due to low selectivity.
+To conduct the experiment, the database was populated with **2001 point-based event records** stored in **EPSG:4326** coordinate reference system. Spatial queries were tested using bounding box filters combined with `EXPLAIN ANALYZE` to observe PostgreSQL query planner behavior.
 
-### Query Plan Without Spatial Index (Wide Bounding Box)
+### Spatial Index Performance Comparison
 
-![Sequential Scan](screenshots/seq_scan_wide_bbox.png)
+#### Without GiST Index (Sequential Scan)
 
-After creating a GiST index on the geometry column and using a more selective bounding box, the query planner switched to an indexed execution plan.
+In the absence of a spatial index, PostgreSQL performs a **sequential scan** over the entire `events` table.  
+This execution strategy is typically chosen when no suitable index exists or when the query selectivity is low.
 
-### Query Plan With GiST Spatial Index (Narrow Bounding Box)
+![Sequential Scan](screenshots/seq_scan_no_index.png)
 
-![Bitmap Index Scan](screenshots/gist_index_narrow_bbox.png)
+- Query Plan: Sequential Scan  
+- Rows scanned: Entire table  
+- Execution time: ~1.4 ms  
 
-With the GiST index enabled, the query returned approximately 55 records with an execution time of ~0.06 ms, demonstrating the effectiveness of spatial indexing for Web GIS applications.
+Although acceptable for small datasets, this approach does not scale well as data volume increases.
+
+---
+
+#### With GiST Spatial Index (Bitmap Index Scan)
+
+After creating a **GiST index** on the geometry column, spatial queries were re-evaluated using a **more selective bounding box**.
+
+![GiST Index](screenshots/gist_index_with_index.png)
+
+- Query Plan: Bitmap Index Scan  
+- Rows returned: ~55  
+- Execution time: ~0.06 ms  
+
+The query planner successfully leveraged the spatial index, significantly reducing the number of scanned rows and overall execution time.
+
+---
+
+### Performance Evaluation Summary
+
+The experiment demonstrates that:
+
+- Spatial indexes are critical for efficient querying in Web GIS applications
+- GiST indexing dramatically improves performance for selective spatial queries
+- Indexed spatial filtering scales far better than sequential scans as dataset size grows
+
+These findings confirm that proper spatial indexing is essential for backend systems supporting real-time, map-based visualization and filtering.
 
 ---
 
