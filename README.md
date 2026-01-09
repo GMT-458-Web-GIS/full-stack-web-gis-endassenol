@@ -95,6 +95,26 @@ backend/
 
 ---
 
+## ⚡ Performance Monitoring & Spatial Indexing Experiment
+
+To evaluate the impact of spatial indexing, the `events` table was populated with 2001 point records (EPSG:4326).
+
+When a wide bounding box covering most of the dataset was used, PostgreSQL preferred a sequential scan due to low selectivity.
+
+### Query Plan Without Spatial Index (Wide Bounding Box)
+
+![Sequential Scan](screenshots/seq_scan_wide_bbox.png)
+
+After creating a GiST index on the geometry column and using a more selective bounding box, the query planner switched to an indexed execution plan.
+
+### Query Plan With GiST Spatial Index (Narrow Bounding Box)
+
+![Bitmap Index Scan](screenshots/gist_index_narrow_bbox.png)
+
+With the GiST index enabled, the query returned approximately 55 records with an execution time of ~0.06 ms, demonstrating the effectiveness of spatial indexing for Web GIS applications.
+
+---
+
 ## 🚧 Planned Features
 The following features are planned for future development and may be revised as the project progresses:
 
