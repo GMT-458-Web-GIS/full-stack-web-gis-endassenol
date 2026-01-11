@@ -5,6 +5,69 @@ const { signToken } = require("../utils/jwt");
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Auth
+ *     description: Authentication & user management
+ */
+
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register a new user
+ *     description: Creates a new user and returns JWT token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Enda
+ *               email:
+ *                 type: string
+ *                 example: enda@test.com
+ *               password:
+ *                 type: string
+ *                 example: "123456"
+ *               role:
+ *                 type: string
+ *                 description: Optional (default is "user")
+ *                 example: user
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               user:
+ *                 id: 484e894f-f0d0-4d09-a903-3f8ab24b70c9
+ *                 name: Enda
+ *                 email: enda@test.com
+ *                 role: user
+ *               token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Missing fields
+ *       409:
+ *         description: Email already exists
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Email already exists
+ */
 router.post("/register", async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -32,6 +95,48 @@ router.post("/register", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Login
+ *     description: Authenticates user and returns JWT token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: enda@test.com
+ *               password:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             example:
+ *               user:
+ *                 id: 484e894f-f0d0-4d09-a903-3f8ab24b70c9
+ *                 name: Enda
+ *                 email: enda@test.com
+ *                 role: user
+ *               token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Invalid credentials
+ */
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
