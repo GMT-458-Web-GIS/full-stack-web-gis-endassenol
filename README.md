@@ -94,6 +94,38 @@ backend/
 | DELETE | `/events/:id` | Delete an event |
 
 ---
+## 📚 API Documentation (Swagger)
+
+The backend API of this project is documented using **Swagger UI**, which provides an interactive interface for exploring and testing all available endpoints.
+
+### Accessing Swagger UI
+After starting the backend server, the Swagger interface can be accessed at: http://localhost:5000/docs
+
+
+### JWT Authorization via Swagger
+Some API endpoints require authentication and role-based authorization.
+
+To authorize requests in Swagger:
+
+1. Obtain a JWT token by calling:
+   - `POST /auth/register` or
+   - `POST /auth/login`
+
+2. Copy the `token` value from the response.
+
+3. Click the **Authorize** button located at the top-right corner of the Swagger UI.
+
+4. Paste the token into the Bearer authorization field and confirm.
+
+After authorization, protected endpoints such as event creation, update, and deletion can be tested directly through the Swagger interface.
+
+### Protected Endpoints
+- `POST /events`
+- `PATCH /events/{id}`
+- `DELETE /events/{id}`
+
+Swagger enables visual inspection of request and response structures and simplifies testing of secured API operations.
+
 
 ## ⚡ Performance Monitoring & Spatial Indexing Experiment
 
