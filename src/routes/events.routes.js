@@ -6,10 +6,88 @@ const { requireRole } = require("../middleware/roles");
 const router = express.Router();
 
 /**
- * GET /events
- * Optional query:
- *  - category=concert
- *  - bbox=minLon,minLat,maxLon,maxLat
+ * @swagger
+ * tags:
+ *   - name: Events
+ *     description: Urban events & facilities (PostGIS)
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Event:
+ *       type: object
+ *       properties:
+ *         id: { type: string, format: uuid }
+ *         title: { type: string }
+ *         description: { type: string, nullable: true }
+ *         category: { type: string }
+ *         start_time: { type: string, format: date-time }
+ *         end_time: { type: string, format: date-time, nullable: true }
+ *         price: { type: number, nullable: true }
+ *         created_by: { type: string, format: uuid }
+ *         geom:
+ *           type: object
+ *           description: GeoJSON geometry
+ *           example:
+ *             type: Point
+ *             coordinates: [32.8597, 39.9228]
+ *
+ *     EventCreateRequest:
+ *       type: object
+ *       required: [title, category, start_time, lon, lat]
+ *       properties:
+ *         title: { type: string, example: "WebGIS Workshop" }
+ *         description: { type: string, example: "PostGIS test event" }
+ *         category: { type: string, example: "workshop" }
+ *         start_time: { type: string, format: date-time, example: "2026-01-10T10:00:00+03:00" }
+ *         end_time: { type: string, format: date-time, nullable: true }
+ *         price: { type: number, nullable: true, example: 0 }
+ *         lon: { type: number, example: 32.8597 }
+ *         lat: { type: number, example: 39.9228 }
+ *
+ *     EventUpdateRequest:
+ *       type: object
+ *       description: Provide any fields you want to update. If you provide lon & lat together, geometry is updated.
+ *       properties:
+ *         title: { type: string }
+ *         description: { type: string, nullable: true }
+ *         category: { type: string }
+ *         start_time: { type: string, format: date-time }
+ *         end_time: { type: string, format: date-time, nullable: true }
+ *         price: { type: number, nullable: true }
+ *         lon: { type: number }
+ *         lat: { type: number }
+ */
+
+/**
+ * @swagger
+ * /events:
+ *   get:
+ *     summary: List events (optionally filter by category or bbox)
+ *     tags: [Events]
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema: { type: string }
+ *         required: false
+ *         description: Filter by event category (e.g., concert, workshop)
+ *       - in: query
+ *         name: bbox
+ *         schema: { type: string }
+ *         required: false
+ *         description: Bounding box filter as "minLon,minLat,maxLon,maxLat" in EPSG:4326
+ *         example: "32.80,39.85,32.95,40.00"
+ *     responses:
+ *       200:
+ *         description: Array of events (GeoJSON geometry included)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: "#/components/schemas/Event"
  */
 router.get("/", async (req, res) => {
   const { category, bbox } = req.query;
@@ -22,17 +100,21 @@ router.get("/", async (req, res) => {
     where.push(`category = $${params.length}`);
   }
 
+  // IMPORTANT: use bbox operator "&&" to benefit from GiST index
   if (bbox) {
     const parts = String(bbox).split(",").map(Number);
     if (parts.length === 4 && parts.every(Number.isFinite)) {
       const [minLon, minLat, maxLon, maxLat] = parts;
       params.push(minLon, minLat, maxLon, maxLat);
       where.push(`
-        ST_Within(
-          geom,
-          ST_MakeEnvelope($${params.length-3}, $${params.length-2}, $${params.length-1}, $${params.length}, 4326)
+        geom && ST_MakeEnvelope(
+          $${params.length - 3}, $${params.length - 2},
+          $${params.length - 1}, $${params.length},
+          4326
         )
       `);
+    } else {
+      return res.status(400).json({ message: "Invalid bbox format. Use minLon,minLat,maxLon,maxLat" });
     }
   }
 
@@ -46,14 +128,40 @@ router.get("/", async (req, res) => {
     ORDER BY start_time DESC
     LIMIT 200;
   `;
+
   const r = await pool.query(q, params);
   res.json(r.rows);
 });
 
 /**
- * POST /events
- * Body: {title, description?, category, start_time, end_time?, price?, lon, lat}
- * Only admin/organizer
+ * @swagger
+ * /events:
+ *   post:
+ *     summary: Create a new event (admin/organizer)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: "#/components/schemas/EventCreateRequest"
+ *     responses:
+ *       201:
+ *         description: Created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: string, format: uuid }
+ *       400:
+ *         description: Missing fields
+ *       401:
+ *         description: Missing/invalid token
+ *       403:
+ *         description: Not allowed (role)
  */
 router.post("/", requireAuth, requireRole("admin", "organizer"), async (req, res) => {
   const { title, description, category, start_time, end_time, price, lon, lat } = req.body;
@@ -84,9 +192,35 @@ router.post("/", requireAuth, requireRole("admin", "organizer"), async (req, res
 });
 
 /**
- * PATCH /events/:id
- * Admin can update any. Organizer can update only own.
- * (If lon/lat provided together -> geometry updates)
+ * @swagger
+ * /events/{id}:
+ *   patch:
+ *     summary: Update an event (admin any, owner only own)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: "#/components/schemas/EventUpdateRequest"
+ *     responses:
+ *       200:
+ *         description: Updated
+ *       400:
+ *         description: No fields to update
+ *       401:
+ *         description: Missing/invalid token
+ *       403:
+ *         description: Not allowed
+ *       404:
+ *         description: Event not found
  */
 router.patch("/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
@@ -111,10 +245,10 @@ router.patch("/:id", requireAuth, async (req, res) => {
     }
   }
 
-  // geometry update
+  // geometry update (requires both)
   if (req.body.lon !== undefined && req.body.lat !== undefined) {
     params.push(req.body.lon, req.body.lat);
-    set.push(`geom = ST_SetSRID(ST_MakePoint($${params.length-1}, $${params.length}), 4326)`);
+    set.push(`geom = ST_SetSRID(ST_MakePoint($${params.length - 1}, $${params.length}), 4326)`);
   }
 
   if (set.length === 0) return res.status(400).json({ message: "No fields to update" });
@@ -127,8 +261,27 @@ router.patch("/:id", requireAuth, async (req, res) => {
 });
 
 /**
- * DELETE /events/:id
- * Admin can delete any. Organizer can delete only own.
+ * @swagger
+ * /events/{id}:
+ *   delete:
+ *     summary: Delete an event (admin any, owner only own)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Deleted
+ *       401:
+ *         description: Missing/invalid token
+ *       403:
+ *         description: Not allowed
+ *       404:
+ *         description: Event not found
  */
 router.delete("/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
