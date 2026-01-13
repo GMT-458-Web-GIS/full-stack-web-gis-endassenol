@@ -1,5 +1,10 @@
+console.log("🔥 SERVER.JS LOADED FROM:", __filename);
 require("dotenv").config();
 require("./db/pg");
+
+// ✅ Mongo
+const { connectMongo } = require("./db/mongo");
+connectMongo();
 
 const app = require("./app");
 

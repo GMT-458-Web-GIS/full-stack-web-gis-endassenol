@@ -16,18 +16,17 @@ const options = {
     ],
     components: {
       securitySchemes: {
-        bearerAuth: {
+        BearerAuth: {                // 🔥 logs.routes.js ile birebir
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
         },
       },
     },
-    // global auth (istersen böyle kalsın)
-    security: [{ bearerAuth: [] }],
+    // 🔐 global auth (authorize bir kez, her yerde çalışsın)
+    security: [{ BearerAuth: [] }],
   },
   apis: ["./src/routes/*.js"],
 };
 
 module.exports = swaggerJSDoc(options);
-
