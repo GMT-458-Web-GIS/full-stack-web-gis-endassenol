@@ -164,6 +164,37 @@ http://localhost:5000/docs
 3. Click **Authorize** in Swagger UI  
 4. Paste the token into the Bearer field  
 
+
+---
+
+## 📸 Screenshots
+
+### Swagger – Admin Logs Access (200 OK)
+This screenshot demonstrates successful access to the admin-only logs endpoint after JWT authorization.
+
+![Swagger Logs Admin](screenshots/swagger-logs-admin.png)
+
+---
+
+### Swagger – Forbidden Logs Access (403)
+This screenshot shows role-based access control in action, where a non-admin user is denied access to the logs endpoint.
+
+![Swagger Logs Forbidden](screenshots/swagger-logs-forbidden.png)
+
+---
+
+### Swagger – Spatial Event Query (Bounding Box)
+This screenshot illustrates spatial filtering of events using bounding box parameters in a PostGIS-enabled endpoint.
+
+![Swagger Events BBOX](screenshots/swagger-events-bbox.png)
+
+---
+
+### Swagger – JWT Authentication Flow
+This screenshot shows the authentication process where a JWT token is issued after a successful login request.
+
+![Swagger Login Token](screenshots/swagger-login-token.png)
+
 ---
 
 ## ⚡ Performance Monitoring & Spatial Indexing Experiment
