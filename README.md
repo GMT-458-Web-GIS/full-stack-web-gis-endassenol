@@ -8,6 +8,10 @@ This project is a role-based Web GIS application designed to manage, query, and 
 
 The project follows a backend-first and modular development approach. Core GIS and security functionalities are implemented at the API level, while frontend integration is provided as a lightweight demonstration and may be further extended.
 
+## 🔗 Live Application
+The application is deployed and can be accessed at:
+**[http://13.60.63.231:5000/](http://13.60.63.231:5000/)**
+
 ---
 
 ## 🎯 Project Objectives
@@ -285,6 +289,15 @@ While the backend and database architecture are fully functional, some challenge
 
 1. **Frontend-Spatial Sync Issue:** Although the PostgreSQL (PostGIS) database contains 180 spatial records, a synchronization gap exists between the database projections (SRID 4326) and the frontend map rendering (Leaflet). This results in the partial visualization of events on the live map despite successful API data retrieval.
 2. **Environment Connectivity:** The transition from a local development server to a public AWS IP caused certain endpoint mismatches in the Swagger UI, which are currently being addressed through dynamic environment variables.
+
+---
+
+### 🚨 Important Note on Live Data Visualization
+While the live application is accessible, you may notice that the 180 event records are not currently visible on the map interface at the link provided. 
+
+- **Database Integrity:** All 180 records exist and are verified within the PostGIS database.
+- **Visualization Issue:** A synchronization mismatch between the backend GeoJSON output and the Leaflet frontend layer mapping occurred during the final deployment to AWS.
+- **Proof of Data:** The presence of the data can be verified through the `GET /events` endpoint or by inspecting the database screenshots provided in the `screenshots/` folder.
 
 ---
 
