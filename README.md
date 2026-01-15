@@ -71,6 +71,11 @@ docker-compose.yml
 
 ## ✅ Implemented Features
 
+### 🚀 Cloud Deployment & Process Management (AWS)
+- **AWS EC2 Hosting:** The entire backend system is deployed on an AWS EC2 instance for global accessibility.
+- **Continuous Availability (PM2):** Process management is handled by **PM2**, ensuring the server remains online 24/7 and automatically restarts after crashes.
+- **Security Group Configuration:** Port 5000 and 80 are configured to allow external traffic for seamless API interaction.
+
 ### 🔐 Authentication & Authorization
 - User registration and login functionality  
 - JWT-based authentication mechanism  
@@ -152,10 +157,9 @@ Non-admin users receive a **403 Forbidden** response.
 ---
 
 ## 📚 API Documentation (Swagger)
-
-Swagger UI provides an interactive interface for exploring and testing the API.
-
-http://localhost:5000/docs
+The API documentation is accessible at the following live deployment address:
+http://13.60.63.231:5000/docs  
+*(Note: Due to a final server-side configuration sync, if the public UI fails to render, please refer to the localhost documentation for interactive testing.)*
 
 
 ### JWT Authorization Flow
@@ -196,6 +200,46 @@ This screenshot shows the authentication process where a JWT token is issued aft
 ![Swagger Login Token](screenshots/swagger-login-token.png)
 
 ---
+## 🚀 Load & Stress Testing (Artillery)
+
+In order to evaluate the runtime stability and basic performance characteristics of the backend API, a **load testing experiment** was conducted using **Artillery**, a performance testing framework for HTTP-based services.
+
+The test was executed on the `/health` endpoint because it does not require authentication and returns a lightweight, consistent response. This allows the experiment to focus on **server responsiveness and concurrency handling**, without introducing authentication or database query overhead.
+
+---
+
+### 🧪 Test Configuration
+
+- **Target:** `http://localhost:5000`
+- **Warm-up phase:** 20 seconds @ 5 virtual users/sec
+- **Load phase:** 40 seconds @ 20 virtual users/sec
+- **Scenario:** Repeated `GET /health` requests
+- **Total requests:** 900+ (during the full run)
+
+The configuration was defined in `backend/artillery.yml` and executed locally while the backend server was running.
+
+---
+
+### 📸 Test Execution Output 
+
+This screenshot shows the Artillery run and the summary report printed in the terminal:
+
+![Artillery Console Summary](screenshots/test-execution-output.png)
+
+---
+
+### 📈 JSON Report Output 
+
+The test results were also exported in JSON format for documentation and structured analysis.
+
+![Artillery JSON Report](screenshots/json-report-output.png)
+
+
+Output file path:
+
+```text
+performance/artillery-health.json
+
 
 ## ⚡ Performance Monitoring & Spatial Indexing Experiment
 A performance evaluation was conducted to assess the impact of spatial indexing on PostGIS query execution.
@@ -238,6 +282,12 @@ The project was developed incrementally with regular Git commits. The backend ar
 ✔ Spatial CRUD operations functional  
 ✔ Category and bounding box filtering supported  
 ✔ Request logging and admin log access implemented  
+
+## ⚠️ Technical Challenges & Identified Constraints
+While the backend and database architecture are fully functional, some challenges were encountered during the cloud migration phase:
+
+1. **Frontend-Spatial Sync Issue:** Although the PostgreSQL (PostGIS) database contains 180 spatial records, a synchronization gap exists between the database projections (SRID 4326) and the frontend map rendering (Leaflet). This results in the partial visualization of events on the live map despite successful API data retrieval.
+2. **Environment Connectivity:** The transition from a local development server to a public AWS IP caused certain endpoint mismatches in the Swagger UI, which are currently being addressed through dynamic environment variables.
 
 ---
 
