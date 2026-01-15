@@ -235,10 +235,7 @@ The test results were also exported in JSON format for documentation and structu
 ![Artillery JSON Report](screenshots/json-report-output.png)
 
 
-Output file path:
-
-```text
-performance/artillery-health.json
+---
 
 
 ## ⚡ Performance Monitoring & Spatial Indexing Experiment
