@@ -1,0 +1,17 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 20
+      arrivalRate: 5
+      name: "warmup"
+    - duration: 40
+      arrivalRate: 20
+      name: "load"
+  ensure:
+    p95: 800
+
+scenarios:
+  - name: "Health"
+    flow:
+      - get:
+          url: "/health"
